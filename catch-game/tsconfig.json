@@ -4,7 +4,7 @@
     "target": "es5",
     "sourceMap": true,
     "outFile": "build.js",
-    "sourceRoot": "src/ts"
+    "sourceRoot": "src/ts/**"
   },
   "exclude": [
     "node_modules"

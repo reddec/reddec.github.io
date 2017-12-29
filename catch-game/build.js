@@ -233,19 +233,24 @@ var Tracer = /** @class */ (function () {
     return Tracer;
 }());
 var Circle = /** @class */ (function () {
-    function Circle(item, r, color) {
+    function Circle(item, r, color, fill) {
         if (r === void 0) { r = 10; }
         if (color === void 0) { color = "#ff0000"; }
+        if (fill === void 0) { fill = null; }
         this.item = item;
         this.r = r;
         this.color = color;
+        this.fill = fill;
     }
     Circle.prototype.draw = function (screenW, screenH, ctx) {
         ctx.strokeStyle = this.color;
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = this.fill;
         ctx.beginPath();
         ctx.arc(this.item.at.x, this.item.at.y, this.r, 0, 2 * Math.PI);
         ctx.stroke();
+        if (this.fill) {
+            ctx.fill();
+        }
     };
     return Circle;
 }());
@@ -379,5 +384,149 @@ var Rocket = /** @class */ (function () {
         }
     };
     return Rocket;
+}());
+var BasicWorld = /** @class */ (function () {
+    function BasicWorld(engine, logic, onGameWin, onGameLose) {
+        this.engine = engine;
+        this.logic = logic;
+        this.onGameWin = onGameWin;
+        this.onGameLose = onGameLose;
+        this.targetRadius = 20;
+        this.rocketRadius = 10;
+        this.planetRadius = 30;
+        this.initEnvironment();
+        this.initLinks();
+        this.initUI();
+    }
+    Object.defineProperty(BasicWorld.prototype, "width", {
+        get: function () {
+            return this.engine.element.width;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(BasicWorld.prototype, "height", {
+        get: function () {
+            return this.engine.element.height;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    BasicWorld.prototype.initEnvironment = function () {
+        var center = new Point(this.width / 2, this.height / 2);
+        this.planet = new StaticRadioEmission(10000, center);
+        this.rocket = new MassObject(20, center.right(100).bottom(100));
+        this.rocketEngine = new SmartEngine(this.rocket, this.logic);
+        this.target = new RadialSingleSpot(center.left(120).top(70), this.onGameWin, this.targetRadius + this.rocketRadius, [this.rocket]);
+        this.planetBorder = new RadialSingleSpot(this.planet.at, this.onGameLose, this.planetRadius + this.rocketRadius, [this.rocket]);
+        this.tracer = new Tracer(this.rocket);
+        this.engine.items.push(this.planet, this.rocket, this.target, this.planetBorder, this.tracer, this.rocketEngine);
+    };
+    BasicWorld.prototype.initLinks = function () {
+        this.engine.items.push(new ForceLink([this.rocket], [this.planet]));
+    };
+    BasicWorld.prototype.initUI = function () {
+        var _this = this;
+        this.engine.visuals.push(new Grid(50, '#eeeeee'), new Path(this.tracer), new Circle(this.planet, this.planetRadius, '#00ff00'), new Circle(this.target, this.targetRadius, '#0000ff', '#0000ff'), new Rocket(this.rocket, this.rocketEngine, this.rocketRadius), new DynamicLabel(new Point(20, 20), function () {
+            return 'Step: ' + _this.engine.currentStep;
+        }), new DynamicLabel(new Point(20, 45), function () {
+            return 'Fuel: ' + _this.rocketEngine.usage.toFixed(3);
+        }));
+    };
+    BasicWorld.prototype.start = function () {
+        var _this = this;
+        this.stop();
+        this.timer = setInterval(function () {
+            _this.engine.update();
+        }, 41);
+    };
+    BasicWorld.prototype.stop = function () {
+        clearInterval(this.timer);
+    };
+    BasicWorld.prototype.update = function () {
+        this.engine.update();
+    };
+    return BasicWorld;
+}());
+var MultiWorld = /** @class */ (function () {
+    function MultiWorld(engine, logic, onGameWin, onGameLose) {
+        this.engine = engine;
+        this.logic = logic;
+        this.onGameWin = onGameWin;
+        this.onGameLose = onGameLose;
+        var rocketRadius = 10;
+        var rocket = new MassObject(20, new Point(202, 444.63755));
+        var rocketEngine = new SmartEngine(rocket, logic);
+        var rocketUI = new Rocket(rocket, rocketEngine, rocketRadius, '#ff0000');
+        var planet0Radius = 30;
+        var planet0 = new StaticRadioEmission(22500.0, new Point(749, 387.63755));
+        var planet0Border = new RadialSingleSpot(planet0.at, onGameLose, planet0Radius + rocketRadius, [rocket]);
+        var planet0UI = new Circle(planet0, planet0Radius, '#008000');
+        var planet1Radius = 30;
+        var planet1 = new StaticRadioEmission(22500.0, new Point(372, 125.63754999999998));
+        var planet1Border = new RadialSingleSpot(planet1.at, onGameLose, planet1Radius + rocketRadius, [rocket]);
+        var planet1UI = new Circle(planet1, planet1Radius, '#008000');
+        var planet2Radius = 38;
+        var planet2 = new StaticRadioEmission(36100.0, new Point(617, 357.63755));
+        var planet2Border = new RadialSingleSpot(planet2.at, onGameLose, planet2Radius + rocketRadius, [rocket]);
+        var planet2UI = new Circle(planet2, planet2Radius, '#008000');
+        var planet3Radius = 30;
+        var planet3 = new StaticRadioEmission(22500.0, new Point(440, 206.63754999999998));
+        var planet3Border = new RadialSingleSpot(planet3.at, onGameLose, planet3Radius + rocketRadius, [rocket]);
+        var planet3UI = new Circle(planet3, planet3Radius, '#008000');
+        var planet4Radius = 67;
+        var planet4 = new StaticRadioEmission(112225.0, new Point(619, 164.63754999999998));
+        var planet4Border = new RadialSingleSpot(planet4.at, onGameLose, planet4Radius + rocketRadius, [rocket]);
+        var planet4UI = new Circle(planet4, planet4Radius, '#008000');
+        var planet5Radius = 31;
+        var planet5 = new StaticRadioEmission(24025.0, new Point(511, 281.63755));
+        var planet5Border = new RadialSingleSpot(planet5.at, onGameLose, planet5Radius + rocketRadius, [rocket]);
+        var planet5UI = new Circle(planet5, planet5Radius, '#008000');
+        var planet6Radius = 30;
+        var planet6 = new StaticRadioEmission(22500.0, new Point(351, 29.637549999999976));
+        var planet6Border = new RadialSingleSpot(planet6.at, onGameLose, planet6Radius + rocketRadius, [rocket]);
+        var planet6UI = new Circle(planet6, planet6Radius, '#008000');
+        var planet7Radius = 30;
+        var planet7 = new StaticRadioEmission(22500.0, new Point(518, 84.63754999999998));
+        var planet7Border = new RadialSingleSpot(planet7.at, onGameLose, planet7Radius + rocketRadius, [rocket]);
+        var planet7UI = new Circle(planet7, planet7Radius, '#008000');
+        var planet8Radius = 65;
+        var planet8 = new StaticRadioEmission(105625.0, new Point(301, 261.63755));
+        var planet8Border = new RadialSingleSpot(planet8.at, onGameLose, planet8Radius + rocketRadius, [rocket]);
+        var planet8UI = new Circle(planet8, planet8Radius, '#008000');
+        var target0Radius = 20;
+        var target0 = new RadialSingleSpot(new Point(708, 76.63754999999998), onGameWin, target0Radius + rocketRadius, [rocket]);
+        var target0UI = new Circle(target0, target0Radius, '#000080', '#000080');
+        var planet9Radius = 30;
+        var planet9 = new StaticRadioEmission(22500.0, new Point(745, 209.63754999999998));
+        var planet9Border = new RadialSingleSpot(planet9.at, onGameLose, planet9Radius + rocketRadius, [rocket]);
+        var planet9UI = new Circle(planet9, planet9Radius, '#008000');
+        var planet10Radius = 65;
+        var planet10 = new StaticRadioEmission(105625.0, new Point(480, 498.63755));
+        var planet10Border = new RadialSingleSpot(planet10.at, onGameLose, planet10Radius + rocketRadius, [rocket]);
+        var planet10UI = new Circle(planet10, planet10Radius, '#008000');
+        var links = new ForceLink([rocket], [planet0, planet1, planet2, planet3, planet4, planet5, planet6, planet7, planet8, planet9, planet10]);
+        var tracer = new Tracer(rocket);
+        engine.items.push(planet0, planet0Border, planet1, planet1Border, planet2, planet2Border, planet3, planet3Border, planet4, planet4Border, planet5, planet5Border, planet6, planet6Border, planet7, planet7Border, planet8, planet8Border, planet9, planet9Border, planet10, planet10Border, target0, rocket, rocketEngine, links, tracer);
+        engine.visuals.push(new Grid(50, '#eeeeee'), new Path(tracer), planet0UI, planet1UI, planet2UI, planet3UI, planet4UI, planet5UI, planet6UI, planet7UI, planet8UI, planet9UI, planet10UI, target0UI, new Rocket(rocket, rocketEngine, rocketRadius), new DynamicLabel(new Point(20, 20), function () {
+            return 'Step: ' + engine.currentStep;
+        }), new DynamicLabel(new Point(20, 45), function () {
+            return 'Fuel: ' + rocketEngine.usage.toFixed(3);
+        }));
+    }
+    MultiWorld.prototype.start = function () {
+        var _this = this;
+        this.stop();
+        this.timer = setInterval(function () {
+            _this.engine.update();
+        }, 41);
+    };
+    MultiWorld.prototype.stop = function () {
+        clearInterval(this.timer);
+    };
+    MultiWorld.prototype.update = function () {
+        this.engine.update();
+    };
+    return MultiWorld;
 }());
 //# sourceMappingURL=build.js.map

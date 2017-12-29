@@ -17,6 +17,10 @@
     <div class="grid-x grid-margin-x">
         <div class="shrink cell">
             <div id="result"></div>
+            <div class="button-group">
+                <button class="button success" onclick="chooseBasic()">Basic</button>
+                <button class="button success" onclick="chooseMedium()">Medium</button>
+            </div>
             <canvas id="canvas" width="800" height="600"></canvas>
         </div>
         <div class="auto cell">
@@ -41,14 +45,9 @@
 </script>
 <script>
     var elem = document.getElementById("canvas");
-    var center = new Point(elem.width / 2, elem.height / 2);
-    var engine = new Engine(elem);
-    var timer;
-    var planetRadius = 30, rocketRadius = 10, targetRadius = 20;
-    var planet, rocket, rocketEngine;
-    var target, planetBorder;
-    var tracer;
     var userLogic;
+    var world;
+    var prototype = BasicWorld;
 
     function rocketLogic(step) {
         var ctx = {
@@ -57,69 +56,50 @@
             step: step
         };
         userLogic.bind(ctx)();
+
         return new Point(ctx.fx, ctx.fy);
     }
 
+    function chooseBasic() {
+        stop();
+        prototype = BasicWorld;
+        world = makeWorld();
+        world.update();
+    }
+
+    function chooseMedium() {
+        stop();
+        prototype = MultiWorld;
+        world = makeWorld();
+        world.update();
+    }
+
+    function makeWorld() {
+        var engine = new Engine(elem);
+        userLogic = new Function(editor.getValue());
+        console.log(editor.getValue());
+        document.getElementById("result").innerHTML = '';
+        return new prototype(engine, rocketLogic, gameSuccess, gameFail);
+    }
+
     function gameSuccess(items) {
-        clearInterval(timer);
+        world.stop();
         document.getElementById("result").innerHTML = '<h1 style="color: green">Success!</h1>';
     }
 
     function gameFail(items) {
-        clearInterval(timer);
+        world.stop();
         document.getElementById("result").innerHTML = '<h1 style="color: red">Fail :-(</h1>';
     }
 
 
-    function initEnvironment() {
-        planet = new StaticRadioEmission(10000, center);
-        rocket = new MassObject(20, center.right(100).bottom(100));
-        rocketEngine = new SmartEngine(rocket, rocketLogic);
-        target = new RadialSingleSpot(center.left(120).top(70), gameSuccess, targetRadius + rocketRadius, [rocket]);
-        planetBorder = new RadialSingleSpot(planet.at, gameFail, planetRadius + rocketRadius, [rocket]);
-        tracer = new Tracer(rocket);
-        engine.items.push(planet, rocket, target, planetBorder, tracer);
-    }
-
-    function initLinks() {
-        engine.items.push(new ForceLink([rocket], [planet]));
-    }
-
-    function initUI() {
-        engine.visuals.push(
-            new Grid(50, '#eeeeee'),
-            new Path(tracer),
-            new Circle(planet, planetRadius, '#00ff00'),
-            new Circle(target, targetRadius, '#0000ff'),
-            new Rocket(rocket, rocketEngine, rocketRadius),
-            new DynamicLabel(new Point(20, 20), function () {
-                return 'Step: ' + engine.currentStep;
-            }),
-            new DynamicLabel(new Point(20, 45), function () {
-                return 'Fuel: ' + rocketEngine.usedPower.toFixed(3);
-            })
-        );
-    }
-
     function start() {
-        document.getElementById("result").innerHTML = '';
-        clearInterval(timer);
-        engine = new Engine(elem);
-        initEnvironment();
-        initLinks();
-        initUI();
-
-        userLogic = new Function(editor.getValue());
-        engine.items.push(rocketEngine);
-        timer = setInterval(function () {
-            engine.update();
-        }, 41);
+        if (world) world.stop();
+        world = makeWorld();
+        world.start();
     }
 
-    initEnvironment();
-    initLinks();
-    initUI();
-    engine.update();
-
+    world = makeWorld();
+    world.update();
 </script>
 </html>

@@ -3,16 +3,19 @@ interface Visual {
 }
 
 class Circle implements Visual {
-    constructor(readonly item: WithLocation, readonly r: number = 10, readonly color: string = "#ff0000") {
+    constructor(readonly item: WithLocation, readonly r: number = 10, readonly color: string = "#ff0000", readonly fill: string = null) {
     }
 
 
     draw(screenW, screenH: number, ctx: CanvasRenderingContext2D) {
         ctx.strokeStyle = this.color;
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = this.fill;
         ctx.beginPath();
         ctx.arc(this.item.at.x, this.item.at.y, this.r, 0, 2 * Math.PI);
         ctx.stroke();
+        if (this.fill) {
+            ctx.fill();
+        }
     }
 }
 
