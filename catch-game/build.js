@@ -45,7 +45,7 @@ var Engine = /** @class */ (function () {
         var h = this.element.height;
         this.ctx.clearRect(0, 0, w, h);
         this.visuals.forEach(function (item) {
-            item.draw(w, h, _this.ctx);
+            item.draw(w, h, _this.ctx, _this.step);
         });
         this.step += 1;
     };
@@ -112,7 +112,15 @@ var SmartEngine = /** @class */ (function () {
         this.logic = logic;
         this.maxPower = maxPower;
         this.usedPower = 0;
+        this.lastForce_ = new Point();
     }
+    Object.defineProperty(SmartEngine.prototype, "lastForce", {
+        get: function () {
+            return this.lastForce_;
+        },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(SmartEngine.prototype, "usage", {
         get: function () {
             return this.usedPower;
@@ -129,6 +137,7 @@ var SmartEngine = /** @class */ (function () {
             power = this.maxPower;
             force = force.norm().mul(this.maxPower);
         }
+        this.lastForce_ = force;
         this.usedPower += power;
         this.obj.applyForce(force);
     };
@@ -176,7 +185,52 @@ var Point = /** @class */ (function () {
     Point.prototype.norm = function () {
         return this.div(this.length());
     };
+    Point.prototype.angle = function () {
+        var angle = Math.atan(this.y / this.x);
+        if (this.x < 0)
+            angle = angle + Math.PI;
+        return angle;
+    };
     return Point;
+}());
+var RadialSingleSpot = /** @class */ (function () {
+    function RadialSingleSpot(at, trigger, radius, monitor) {
+        if (radius === void 0) { radius = 20; }
+        if (monitor === void 0) { monitor = []; }
+        this.at = at;
+        this.trigger = trigger;
+        this.radius = radius;
+        this.monitor = monitor;
+        this.triggered = false;
+    }
+    RadialSingleSpot.prototype.StepUpdated = function (step) {
+        var _this = this;
+        if (this.triggered)
+            return;
+        var spotted = this.monitor
+            .filter(function (item) { return item.at.distanceTo(_this.at) <= _this.radius; });
+        if (spotted.length > 0) {
+            this.triggered = true;
+            this.trigger(spotted);
+        }
+    };
+    return RadialSingleSpot;
+}());
+var Tracer = /** @class */ (function () {
+    function Tracer(obj) {
+        this.obj = obj;
+        this.path = [];
+    }
+    Tracer.prototype.StepUpdated = function (step) {
+        if (this.path.length != 0) {
+            var last = this.path[this.path.length - 1];
+            if (last.distanceTo(this.obj.at) < 3) {
+                return;
+            }
+        }
+        this.path.push(this.obj.at);
+    };
+    return Tracer;
 }());
 var Circle = /** @class */ (function () {
     function Circle(item, r, color) {
@@ -280,43 +334,50 @@ var Path = /** @class */ (function () {
     };
     return Path;
 }());
-var RadialSingleSpot = /** @class */ (function () {
-    function RadialSingleSpot(at, trigger, radius, monitor) {
-        if (radius === void 0) { radius = 20; }
-        if (monitor === void 0) { monitor = []; }
-        this.at = at;
-        this.trigger = trigger;
-        this.radius = radius;
-        this.monitor = monitor;
-        this.triggered = false;
-    }
-    RadialSingleSpot.prototype.StepUpdated = function (step) {
-        var _this = this;
-        if (this.triggered)
-            return;
-        var spotted = this.monitor
-            .filter(function (item) { return item.at.distanceTo(_this.at) <= _this.radius; });
-        if (spotted.length > 0) {
-            this.triggered = true;
-            this.trigger(spotted);
-        }
-    };
-    return RadialSingleSpot;
-}());
-var Tracer = /** @class */ (function () {
-    function Tracer(obj) {
+var Rocket = /** @class */ (function () {
+    function Rocket(obj, engine, size, stroke) {
+        if (size === void 0) { size = 10; }
+        if (stroke === void 0) { stroke = '#ff0000'; }
         this.obj = obj;
-        this.path = [];
+        this.engine = engine;
+        this.size = size;
+        this.stroke = stroke;
     }
-    Tracer.prototype.StepUpdated = function (step) {
-        if (this.path.length != 0) {
-            var last = this.path[this.path.length - 1];
-            if (last.distanceTo(this.obj.at) < 3) {
-                return;
+    Rocket.prototype.draw = function (screenW, screenH, ctx, step) {
+        var center = this.obj.at;
+        ctx.strokeStyle = this.stroke;
+        ctx.fillStyle = this.stroke;
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, this.size, 0, 2 * Math.PI);
+        ctx.stroke();
+        var power = this.engine.lastForce.length();
+        if (power > 0) {
+            var angle = this.engine.lastForce.angle();
+            //ctx.translate(0, 0);
+            ctx.translate(center.x, center.y);
+            ctx.rotate(Math.PI + angle);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            if (step % 4 < 2) {
+                ctx.lineTo(this.size * 2, this.size / 2);
+                ctx.lineTo(this.size * 1.5, this.size / 4);
+                ctx.lineTo(this.size * 2, 0);
+                ctx.lineTo(this.size * 1.5, -this.size / 4);
+                ctx.lineTo(this.size * 2, -this.size / 2);
             }
+            else {
+                ctx.lineTo(this.size * 1.5, this.size / 2);
+                ctx.lineTo(this.size * 2, this.size / 4);
+                ctx.lineTo(this.size * 1.5, 0);
+                ctx.lineTo(this.size * 2, -this.size / 4);
+                ctx.lineTo(this.size * 1.5, -this.size / 2);
+            }
+            ctx.lineTo(0, 0);
+            ctx.stroke();
+            ctx.fill();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
         }
-        this.path.push(this.obj.at);
     };
-    return Tracer;
+    return Rocket;
 }());
 //# sourceMappingURL=build.js.map

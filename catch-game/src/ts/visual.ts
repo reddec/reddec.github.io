@@ -1,5 +1,5 @@
 interface Visual {
-    draw(screenW, screenH: number, ctx: CanvasRenderingContext2D);
+    draw(screenW, screenH: number, ctx: CanvasRenderingContext2D, step: number);
 }
 
 class Circle implements Visual {
@@ -102,5 +102,55 @@ class Path implements Visual {
 
         ctx.stroke();
 
+    }
+}
+
+interface PowerProvider {
+    readonly lastForce: Point
+    readonly maxPower: number
+}
+
+
+class Rocket implements Visual {
+    constructor(readonly obj: PhysicalItem,
+                readonly engine: PowerProvider,
+                readonly size: number = 10, readonly stroke: string = '#ff0000') {
+
+    }
+
+    draw(screenW, screenH: number, ctx: CanvasRenderingContext2D, step: number) {
+        let center = this.obj.at;
+        ctx.strokeStyle = this.stroke;
+        ctx.fillStyle = this.stroke;
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, this.size, 0, 2 * Math.PI);
+        ctx.stroke();
+        let power = this.engine.lastForce.length();
+        if (power > 0) {
+            let angle = this.engine.lastForce.angle();
+            //ctx.translate(0, 0);
+            ctx.translate(center.x, center.y);
+            ctx.rotate(Math.PI + angle);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            if (step % 4 < 2) {
+                ctx.lineTo(this.size * 2, this.size / 2);
+                ctx.lineTo(this.size * 1.5, this.size / 4);
+                ctx.lineTo(this.size * 2, 0);
+                ctx.lineTo(this.size * 1.5, -this.size / 4);
+                ctx.lineTo(this.size * 2, -this.size / 2);
+            } else {
+                ctx.lineTo(this.size * 1.5, this.size / 2);
+                ctx.lineTo(this.size * 2, this.size / 4);
+                ctx.lineTo(this.size * 1.5, 0);
+                ctx.lineTo(this.size * 2, -this.size / 4);
+                ctx.lineTo(this.size * 1.5, -this.size / 2);
+            }
+
+            ctx.lineTo(0, 0);
+            ctx.stroke();
+            ctx.fill();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+        }
     }
 }

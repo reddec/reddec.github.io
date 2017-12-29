@@ -21,7 +21,8 @@
         </div>
         <div class="auto cell">
             <button style="float: left" onclick="start()" class="button primary">Start</button>
-            <div id="editor"> /* this.fx - force by X, this.fy - force by Y, this.step - step number */</div>
+            <div id="editor"> /* this.fx - force by X, this.fy - force by Y, this.step - step number */
+            </div>
         </div>
     </div>
 </div>
@@ -90,7 +91,7 @@
             new Path(tracer),
             new Circle(planet, planetRadius, '#00ff00'),
             new Circle(target, targetRadius, '#0000ff'),
-            new Circle(rocket, rocketRadius),
+            new Rocket(rocket, rocketEngine, rocketRadius),
             new DynamicLabel(new Point(20, 20), function () {
                 return 'Step: ' + engine.currentStep;
             }),

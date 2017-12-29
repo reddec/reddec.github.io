@@ -47,6 +47,13 @@ class Point {
     norm(): Point {
         return this.div(this.length());
     }
+
+    angle(): number {
+        let angle = Math.atan(this.y / this.x);
+        if (this.x < 0) angle = angle + Math.PI;
+        return angle;
+    }
+
 }
 
 interface WithLocation {

@@ -30,7 +30,7 @@ class Engine {
         this.ctx.clearRect(0, 0, w, h);
 
         this.visuals.forEach(item => {
-            item.draw(w, h, this.ctx);
+            item.draw(w, h, this.ctx, this.step);
         });
         this.step += 1;
     }

@@ -3,7 +3,8 @@
     "module": "commonjs",
     "target": "es5",
     "sourceMap": true,
-    "outFile": "mass-effect/build.js"
+    "outFile": "build.js",
+    "sourceRoot": "src/ts"
   },
   "exclude": [
     "node_modules"
